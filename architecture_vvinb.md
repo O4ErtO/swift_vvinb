@@ -55,8 +55,8 @@
    - Create directories for each component of the VVINB architecture:
      - `View`
      - `ViewController`
-     - `Interactor`
-     - `Navigator`
+     - `Interaction`
+     - `Navigation`
      - `Builder`
 
 ### 2. **Implement Components**

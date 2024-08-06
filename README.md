@@ -6,6 +6,8 @@
 
 VVINB (View-ViewController-Interaction-Navigation-Builder) is a structured architecture designed to enhance the organization and manageability of iOS projects. By separating concerns into distinct components, VVINB makes the codebase more modular and easier to maintain.
 
+[Read more](https://github.com/O4ErtO/swift_vvinb/blob/main/architecture_vvinb.md)
+
 ![VVINB](https://github.com/user-attachments/assets/830cb31e-394f-4e0b-b7b7-8470b0962859)
 
 ## Why VVINB?

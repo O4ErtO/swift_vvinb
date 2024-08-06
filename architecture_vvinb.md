@@ -454,8 +454,3 @@ class MainCoordinator {
     }
 }
 ```
-
-This document provides a comprehensive guide to implementing the VVINB architecture for a new module in your iOS project, highlighting its advantages and potential drawbacks, and offering step-by-step instructions for setup and use.
-```
-
-This markdown file is structured for easy understanding and implementation of the VVINB architecture, including its pros and cons, as well as detailed instructions for setting up and using the architecture in an iOS project.

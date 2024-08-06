@@ -1,5 +1,5 @@
 
-```markdown
+
 # VVINB Architecture: Pros, Cons, and Usage Instructions
 
 ## VVINB Architecture

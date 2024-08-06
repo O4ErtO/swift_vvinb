@@ -1,0 +1,136 @@
+#!/usr/bin/env ruby
+
+require 'xcodeproj'
+require 'open3'
+require 'etc'
+require 'date'
+
+# Check if module name is provided
+if ARGV.length != 1
+  puts "Usage: #{$0} ModuleName"
+  exit 1
+end
+
+module_name = ARGV[0]
+current_dir = Dir.pwd
+project_dir = nil
+project_path = nil
+relative_path_from_project_dir = ""
+target_name = ""
+user_name = Etc.getlogin
+current_date = Date.today
+formatted_date = current_date.strftime('%d.%m.%Y')
+
+# Find .xcodeproj in the current directory and up the directory tree
+until current_dir == '/' do
+  xcodeproj_files = Dir.glob("#{current_dir}/*.xcodeproj")
+  unless xcodeproj_files.empty?
+    project_dir = current_dir
+    project_path = xcodeproj_files.first
+    break
+  end
+  current_dir, last_dir = File.split(current_dir)
+  relative_path_from_project_dir = File.join(last_dir, relative_path_from_project_dir)
+end
+
+components = relative_path_from_project_dir.split('/')
+target_name = components.first
+target_name = relative_path_from_project_dir if components.length == 1
+
+# Exit if Xcode project is not found
+unless project_path
+  puts "Xcode project not found."
+  exit 1
+end
+
+# Create directory structure and files
+module_dir = File.join(Dir.pwd, module_name)
+
+Dir.mkdir(module_dir) unless Dir.exist?(module_dir)
+
+subdirs = ['Data', 'Domain', 'Presentation', 'Presentation/Views']
+
+files = [
+  ["/usr/local/bin/NewModule/Data/NewModuleService.swift", "Data/#{module_name}Service.swift"],
+  ["/usr/local/bin/NewModule/Domain/NewModuleBuilder.swift", "Domain/#{module_name}Builder.swift"],
+  ["/usr/local/bin/NewModule/Domain/NewModuleInteraction.swift", "Domain/#{module_name}Interaction.swift"],
+  ["/usr/local/bin/NewModule/Domain/NewModuleNavigation.swift", "Domain/#{module_name}Navigation.swift"],
+  ["/usr/local/bin/NewModule/Presentation/Views/NewModuleView.swift", "Presentation/Views/#{module_name}View.swift"],
+  ["/usr/local/bin/NewModule/NewModuleViewController.swift", "#{module_name}ViewController.swift"]
+]
+
+# Create subdirectories
+subdirs.each do |subdir|
+  Dir.mkdir(File.join(module_dir, subdir)) unless Dir.exist?(File.join(module_dir, subdir))
+end
+
+# Copy and modify files
+files.each do |template, file|
+  template_content = File.read(template)
+  template_content = template_content.gsub('NewModule', module_name)
+  template_content = template_content.gsub('<TARGET>', target_name)
+  template_content = template_content.gsub('<NAME>', user_name)
+  template_content = template_content.gsub('<DATE>', formatted_date)
+  module_content = template_content
+  File.write(File.join(module_dir, file), module_content)
+end
+
+# Open Xcode project
+project = Xcodeproj::Project.open(project_path)
+
+target = project.targets.find { |t| t.name == target_name }
+
+if target.nil?
+  puts "Target '#{target_name}' not found in the project."
+  exit 1
+end
+
+sources_build_phase = target.source_build_phase
+
+target_group = project.main_group.find_subpath(relative_path_from_project_dir, true)
+module_group = target_group.new_group(module_name, module_dir)
+
+# Create subgroups and add files
+subdirs = ['Data', 'Domain', 'Presentation']
+subdirs.each do |subdir|
+  subdir_group = module_group.new_group(subdir, module_dir + "/" + subdir + "/")
+  Dir.glob(File.join(module_dir, subdir, "*.swift")).each do |file|
+    file_reference = subdir_group.new_reference(file)
+    sources_build_phase.add_file_reference(file_reference)
+  end
+  if subdir === 'Presentation'
+    subdir = "Views"
+    subsubdir_group = subdir_group.new_group(subdir, module_dir + "/Presentation/" + subdir + "/")
+    Dir.glob(File.join(module_dir, 'Presentation/' + subdir, "*.swift")).each do |file|
+      file_reference = subsubdir_group.new_reference(file)
+      sources_build_phase.add_file_reference(file_reference)
+    end
+  end
+end
+
+# Add remaining files to module root group
+files.each do |template, file|
+  next if File.dirname(file) != "."
+
+  file_path = File.join(module_dir, file)
+  file_reference = module_group.new_reference(file_path)
+  sources_build_phase.add_file_reference(file_reference)
+end
+
+# Save changes to the project
+project.save
+
+puts "#{module_name} module created and added to Xcode project."
+
+# Change to your git repository directory
+Dir.chdir(project_dir)
+
+# Execute git add command
+Open3.popen3('git add .') do |stdin, stdout, stderr, wait_thr|
+  exit_status = wait_thr.value
+  unless exit_status.success?
+    raise "Error adding files: #{stderr.read}"
+  end
+
+  puts "Files successfully added."
+end

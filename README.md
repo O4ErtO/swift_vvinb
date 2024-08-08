@@ -34,7 +34,7 @@ VVINB architecture offers several advantages over traditional architectures:
    - A well-defined structure with distinct roles for each component.
    - Helps developers understand the architecture quickly and reduces the learning curve.
 
-## Getting Started
+## VVINB Configure Module
 
 ### Installation
 

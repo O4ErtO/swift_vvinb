@@ -72,7 +72,7 @@ To create a new module:
 
 ### Video Tutorial
 
-Watch the tutorial on using VVINB:
+Watch the tutorial on using VVINB configure:
 
 ![Watch Video](https://github.com/user-attachments/assets/386bfb91-6a98-4c09-9306-44db7886e7ed)
 
